@@ -64,10 +64,12 @@ def split_documents(
 
 def build_vector_store(
     chunks: List[Document],
-    api_key: Optional[str] = None
+    api_key: Optional[str] = None,
+    embedding_model: str = "models/text-embedding-004"
 ) -> Tuple[Chroma, any]:
     """
     Build an in-memory Chroma vector store populated with document chunks.
+    Uses Google AI Studio free-tier compatible embeddings (text-embedding-004).
     A fresh ephemeral collection is created to prevent stale results across uploads.
     """
     gemini_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
@@ -75,7 +77,7 @@ def build_vector_store(
         raise ValueError("Missing Gemini API Key. Please provide it in .env or via the sidebar.")
         
     embeddings = GoogleGenerativeAIEmbeddings(
-        model="models/text-embedding-004",
+        model=embedding_model,
         google_api_key=gemini_key
     )
     

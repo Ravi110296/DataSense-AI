@@ -90,7 +90,15 @@ with st.sidebar:
         "Google Gemini API Key",
         value=env_api_key,
         type="password",
-        help="Get your key at https://aistudio.google.com/"
+        help="Free tier key from https://aistudio.google.com/"
+    )
+    
+    # Free-Tier Model Selection
+    selected_model = st.selectbox(
+        "Gemini Model (Free Tier Compatible)",
+        options=["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro"],
+        index=0,
+        help="Standard free tier models with zero cost on Google AI Studio."
     )
     
     st.divider()
@@ -124,7 +132,8 @@ with st.sidebar:
                     st.session_state.agent = build_analyst_agent(
                         df=st.session_state.df,
                         retriever=st.session_state.retriever,
-                        api_key=api_key
+                        api_key=api_key,
+                        model_name=selected_model
                     )
                 st.success("Sample data loaded & agent initialized!")
                 st.rerun()
@@ -164,7 +173,8 @@ with st.sidebar:
                     st.session_state.agent = build_analyst_agent(
                         df=st.session_state.df,
                         retriever=st.session_state.retriever,
-                        api_key=api_key
+                        api_key=api_key,
+                        model_name=selected_model
                     )
                     st.success("Files processed & agent compiled successfully!")
                     st.rerun()
@@ -250,7 +260,8 @@ if user_query:
             st.session_state.agent = build_analyst_agent(
                 df=st.session_state.df,
                 retriever=st.session_state.retriever,
-                api_key=api_key
+                api_key=api_key,
+                model_name=selected_model
             )
         except Exception as e:
             st.error(f"Initialization error: {str(e)}")
