@@ -65,21 +65,38 @@ def split_documents(
 def build_vector_store(
     chunks: List[Document],
     api_key: Optional[str] = None,
-    embedding_model: str = "models/text-embedding-004"
+    embedding_model: str = "models/gemini-embedding-001"
 ) -> Tuple[Chroma, any]:
     """
     Build an in-memory Chroma vector store populated with document chunks.
-    Uses Google AI Studio free-tier compatible embeddings (text-embedding-004).
+    Uses Google AI Studio free-tier compatible embeddings (models/gemini-embedding-001 with fallback).
     A fresh ephemeral collection is created to prevent stale results across uploads.
     """
     gemini_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     if not gemini_key:
         raise ValueError("Missing Gemini API Key. Please provide it in .env or via the sidebar.")
         
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model=embedding_model,
-        google_api_key=gemini_key
-    )
+    # Attempt with specified model, with fallback to other free-tier embedding IDs
+    candidate_models = [embedding_model, "models/gemini-embedding-2", "models/text-embedding-004"]
+    embeddings = None
+    last_err = None
+    
+    for model_candidate in candidate_models:
+        try:
+            candidate_emb = GoogleGenerativeAIEmbeddings(
+                model=model_candidate,
+                google_api_key=gemini_key
+            )
+            # Test a minimal dummy call to ensure the candidate model works with this key
+            candidate_emb.embed_query("test")
+            embeddings = candidate_emb
+            break
+        except Exception as e:
+            last_err = e
+            continue
+
+    if embeddings is None:
+        raise ValueError(f"Failed to initialize embedding model: {last_err}")
     
     # In-memory ephemeral client so no stale data persists on disk
     client = chromadb.Client()

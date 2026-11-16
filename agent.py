@@ -245,7 +245,7 @@ def build_analyst_agent(
     df: Optional[pd.DataFrame] = None,
     retriever: Optional[Any] = None,
     api_key: Optional[str] = None,
-    model_name: str = "gemini-1.5-flash"
+    model_name: str = "gemini-3.8-flash"
 ):
     """
     Construct and compile the LangGraph workflow:

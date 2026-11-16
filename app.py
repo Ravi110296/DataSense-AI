@@ -93,12 +93,12 @@ with st.sidebar:
         help="Free tier key from https://aistudio.google.com/"
     )
     
-    # Free-Tier Model Selection
+    # Free-Tier Eligible Models from Google AI Studio
     selected_model = st.selectbox(
-        "Gemini Model (Free Tier Compatible)",
-        options=["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro"],
+        "Gemini Model (Free Tier Eligible)",
+        options=["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-3.1-flash-lite"],
         index=0,
-        help="Standard free tier models with zero cost on Google AI Studio."
+        help="Standard free-tier eligible models from Google AI Studio."
     )
     
     st.divider()

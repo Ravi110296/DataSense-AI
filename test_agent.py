@@ -90,7 +90,7 @@ def run_tests():
     print("  ✓ Vector store created and retriever initialized.")
 
     print("\n[Step 3] Compiling LangGraph Agent workflow...")
-    model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+    model_name = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
     print(f"  * Using Free-Tier Model: {model_name}")
     agent = build_analyst_agent(df=df, retriever=retriever, api_key=api_key, model_name=model_name)
     print("  ✓ LangGraph agent compiled successfully.")
