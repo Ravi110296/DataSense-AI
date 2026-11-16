@@ -90,7 +90,7 @@ def run_tests():
     print("  ✓ Vector store created and retriever initialized.")
 
     print("\n[Step 3] Compiling LangGraph Agent workflow...")
-    model_name = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+    model_name = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
     print(f"  * Using Free-Tier Model: {model_name}")
     agent = build_analyst_agent(df=df, retriever=retriever, api_key=api_key, model_name=model_name)
     print("  ✓ LangGraph agent compiled successfully.")
@@ -99,11 +99,19 @@ def run_tests():
     test_results = []
     conversation_history = []
 
+    def extract_text(content):
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            parts = [b["text"] for b in content if isinstance(b, dict) and "text" in b]
+            return "".join(parts) if parts else str(content)
+        return str(content)
+
     def ask(prompt: str, scenario_num: int, title: str):
         print(f"\n{'='*70}\n[TEST {scenario_num}] {title}\nUser Query: \"{prompt}\"\n{'-'*70}")
         messages = [SystemMessage(content=SYSTEM_PROMPT)] + conversation_history + [HumanMessage(content=prompt)]
         res = agent.invoke({"messages": messages})
-        final_response = res["messages"][-1].content
+        final_response = extract_text(res["messages"][-1].content)
         
         # Check tool calls
         tools_used = [m.name for m in res["messages"] if hasattr(m, "name") and m.name]

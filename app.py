@@ -10,6 +10,7 @@ Provides:
 
 import os
 import io
+from typing import Any
 import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
@@ -65,6 +66,23 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+def extract_text_content(content: Any) -> str:
+    """Safely extract plain text from Gemini message content, handling string or block lists."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, dict) and "text" in block:
+                parts.append(block["text"])
+            elif isinstance(block, str):
+                parts.append(block)
+            elif hasattr(block, "text"):
+                parts.append(str(block.text))
+        return "".join(parts) if parts else str(content)
+    return str(content)
+
+
 # Initialize Session State
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -84,21 +102,13 @@ if "processed_pdf_name" not in st.session_state:
 with st.sidebar:
     st.header("⚙️ Configuration & Data")
     
-    # 1. API Key Setup
-    env_api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
+    # 1. API Key Setup (Starts empty by default)
     api_key = st.text_input(
         "Google Gemini API Key",
-        value=env_api_key,
+        value="",
         type="password",
+        placeholder="Paste your Gemini API key here...",
         help="Free tier key from https://aistudio.google.com/"
-    )
-    
-    # Free-Tier Eligible Models from Google AI Studio
-    selected_model = st.selectbox(
-        "Gemini Model (Free Tier Eligible)",
-        options=["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-3.1-flash-lite"],
-        index=0,
-        help="Standard free-tier eligible models from Google AI Studio."
     )
     
     st.divider()
@@ -113,7 +123,7 @@ with st.sidebar:
             if not os.path.exists(sample_csv_path) or not os.path.exists(sample_pdf_path):
                 st.error("Sample files not found. Please run generate_sample_data.py first.")
             elif not api_key.strip():
-                st.error("Please enter a valid Gemini API Key first.")
+                st.error("Please enter your Gemini API Key first.")
             else:
                 with st.spinner("Processing sample CSV and PDF..."):
                     # Load CSV
@@ -132,8 +142,7 @@ with st.sidebar:
                     st.session_state.agent = build_analyst_agent(
                         df=st.session_state.df,
                         retriever=st.session_state.retriever,
-                        api_key=api_key,
-                        model_name=selected_model
+                        api_key=api_key
                     )
                 st.success("Sample data loaded & agent initialized!")
                 st.rerun()
@@ -173,8 +182,7 @@ with st.sidebar:
                     st.session_state.agent = build_analyst_agent(
                         df=st.session_state.df,
                         retriever=st.session_state.retriever,
-                        api_key=api_key,
-                        model_name=selected_model
+                        api_key=api_key
                     )
                     st.success("Files processed & agent compiled successfully!")
                     st.rerun()
@@ -260,8 +268,7 @@ if user_query:
             st.session_state.agent = build_analyst_agent(
                 df=st.session_state.df,
                 retriever=st.session_state.retriever,
-                api_key=api_key,
-                model_name=selected_model
+                api_key=api_key
             )
         except Exception as e:
             st.error(f"Initialization error: {str(e)}")
@@ -290,7 +297,7 @@ if user_query:
                 # Extract final response
                 all_msgs = result["messages"]
                 final_ai_msg = all_msgs[-1]
-                response_text = final_ai_msg.content
+                response_text = extract_text_content(final_ai_msg.content)
 
                 # Extract intermediate tool executions
                 tools_called = []

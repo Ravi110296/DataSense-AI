@@ -245,31 +245,36 @@ def build_analyst_agent(
     df: Optional[pd.DataFrame] = None,
     retriever: Optional[Any] = None,
     api_key: Optional[str] = None,
-    model_name: str = "gemini-3.8-flash"
+    model_name: Optional[str] = None
 ):
     """
     Construct and compile the LangGraph workflow:
-    START -> Agent Node -> Tools Node (conditional) -> Agent Node -> END
+    START -> Agent Node -> Tools Node (conditional) -> Agent Node -> END.
+    Automatically uses fast, free-tier eligible Gemini models.
     """
     gemini_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     if not gemini_key:
-        raise ValueError("Missing Gemini API Key. Provide it in .env or via the sidebar.")
+        raise ValueError("Missing Gemini API Key. Provide it in the sidebar.")
 
     # 1. Initialize tools with active data references
     tools = create_analyst_tools(df, retriever)
 
-    # 2. Initialize LLM with tool binding
+    # 2. Determine best responsive free-tier model
+    # gemini-3.5-flash-lite is the fastest and highly responsive free-tier model
+    effective_model = model_name or "gemini-3.5-flash-lite"
+
+    # 3. Initialize LLM with tool binding and safety timeout
     llm = ChatGoogleGenerativeAI(
-        model=model_name,
-        temperature=0.0,
-        google_api_key=gemini_key
+        model=effective_model,
+        google_api_key=gemini_key,
+        max_retries=2,
+        request_timeout=30.0
     )
     llm_with_tools = llm.bind_tools(tools)
 
-    # 3. Define Graph nodes
+    # 4. Define Graph nodes
     def agent_node(state: MessagesState) -> Dict[str, Any]:
         messages = state["messages"]
-        # Ensure system prompt is first message
         if not messages or not isinstance(messages[0], SystemMessage):
             messages = [SystemMessage(content=SYSTEM_PROMPT)] + list(messages)
         response = llm_with_tools.invoke(messages)
@@ -277,7 +282,7 @@ def build_analyst_agent(
 
     tool_node = ToolNode(tools)
 
-    # 4. Construct StateGraph
+    # 5. Construct StateGraph
     workflow = StateGraph(MessagesState)
     workflow.add_node("agent", agent_node)
     workflow.add_node("tools", tool_node)
