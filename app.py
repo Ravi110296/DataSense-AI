@@ -1,12 +1,14 @@
 """
 app.py - DataSense AI: Intelligent Data Analyst Agent.
 
-Redesigned Enterprise SaaS Interface:
-- Modern, clean, minimal SaaS dashboard aesthetic (#F7F9FC canvas, #F0F3F7 sidebar, #172B4D deep navy text, #238B9E teal accent).
+Premium Enterprise SaaS Interface:
+- Palette: #F6F8FB canvas, #142338 dark navy sidebar, #FFFFFF cards, #17243A deep navy text, #159A91 teal primary accent, #5369D8 secondary accent.
 - Preserves full existing backend: LangChain tools, LangGraph state graph, Pandas analytics, and ChromaDB RAG.
-- Sidebar with Branding, LLM Configuration, Data Sources, Real-time Workspace Status, and Session Controls.
-- Main Workspace with 3 Tabs: 'Ask Data' (Chat & Interactive Query Cards), 'Data Explorer' (Preview & Schema), and 'Document Library' (Indexed Chunks & Pages).
-- Factual execution trace in 'How the agent handled this query'.
+- Distinctive Dark Navy Sidebar: Branding, LLM Configuration, Visual Source Cards, Real-time Status, Session Controls.
+- 3 Dedicated Enterprise Tabs:
+    1. Ask Data: Modern AI assistant workspace, suggested query cards, dynamic charts, and factual execution traces.
+    2. Data Explorer: Business Intelligence dashboard with KPI cards, 2-column charts, interactive dataset preview, and CSV export.
+    3. Document Library: Document intelligence workspace with visual indexing pipeline, metadata, and page inspection reader.
 """
 
 import os
@@ -26,7 +28,7 @@ from agent import build_analyst_agent, SYSTEM_PROMPT
 # Load environment variables
 load_dotenv()
 
-# Streamlit Page Setup
+# Page Setup
 st.set_page_config(
     page_title="DataSense AI - Intelligent Data Analyst",
     page_icon=None,
@@ -34,202 +36,362 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom Enterprise CSS (Clean SaaS Palette: #F7F9FC canvas, #172B4D navy, #238B9E teal accent, #E2E8F0 borders)
+# Premium Enterprise SaaS Styling
 st.markdown("""
 <style>
-    /* Font & Global Reset */
+    /* Font & Global Typography */
     html, body, [class*="css"] {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
     
-    /* Layout Clearance: Generous top padding prevents header cut-off */
+    /* Viewport clearance: prevents any top header cut-off */
     .block-container {
-        padding-top: 3.8rem !important;
+        padding-top: 4.2rem !important;
         padding-bottom: 3.5rem !important;
-        max-width: 1080px !important;
+        max-width: 1120px !important;
     }
 
-    /* Enterprise Palette */
+    /* Core Canvas */
     .stApp {
-        background-color: #F7F9FC;
+        background-color: #F6F8FB;
     }
+
+    /* Dark Navy Enterprise Sidebar (#142338) */
     [data-testid="stSidebar"] {
-        background-color: #F0F3F7 !important;
-        border-right: 1px solid #E2E8F0;
+        background-color: #142338 !important;
+        border-right: 1px solid #1E314B;
+    }
+    [data-testid="stSidebar"] * {
+        color: #E2E8F0;
+    }
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4 {
+        color: #F8FAFC !important;
+        font-size: 0.78rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.08em !important;
+        margin-top: 1.2rem !important;
+        margin-bottom: 0.6rem !important;
+    }
+    [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] span {
+        color: #94A3B8 !important;
+        font-size: 0.84rem !important;
     }
 
-    /* Typography Hierarchy */
-    h1, h2, h3, h4, h5, h6 {
-        color: #172B4D !important;
-        font-weight: 600 !important;
+    /* Sidebar Inputs */
+    [data-testid="stSidebar"] input {
+        background-color: #1A2C44 !important;
+        color: #FFFFFF !important;
+        border: 1px solid #273E5D !important;
+        border-radius: 8px !important;
+        font-size: 0.85rem !important;
+        padding: 8px 12px !important;
     }
-    p, span, label {
-        color: #172B4D;
-    }
-    .muted-text {
-        color: #738095 !important;
-        font-size: 0.85rem;
+    [data-testid="stSidebar"] input:focus {
+        border-color: #159A91 !important;
+        box-shadow: 0 0 0 1px #159A91 !important;
     }
 
-    /* Brand Header in Sidebar */
-    .brand-container {
+    /* Primary Action Buttons in Sidebar */
+    .stSidebar [data-testid="stButton"] button {
+        background-color: #1A2C44 !important;
+        color: #E2E8F0 !important;
+        border: 1px solid #273E5D !important;
+        border-radius: 8px !important;
+        font-size: 0.84rem !important;
+        font-weight: 500 !important;
+        padding: 0.55rem 0.85rem !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+    .stSidebar [data-testid="stButton"] button:hover {
+        background-color: #159A91 !important;
+        border-color: #159A91 !important;
+        color: #FFFFFF !important;
+    }
+
+    /* Main Surface Cards */
+    .saas-card {
+        background-color: #FFFFFF;
+        border: 1px solid #E6EAF0;
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 18px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Sidebar Brand Unit */
+    .brand-unit {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 4px 0 16px 0;
-        border-bottom: 1px solid #E2E8F0;
+        padding: 8px 0 16px 0;
+        border-bottom: 1px solid #1E314B;
         margin-bottom: 16px;
     }
-    .brand-icon {
-        background-color: #238B9E;
+    .brand-logo {
+        background: linear-gradient(135deg, #159A91 0%, #0E7C75 100%);
         color: #FFFFFF;
         width: 36px;
         height: 36px;
-        border-radius: 8px;
+        border-radius: 9px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 18px;
+        font-size: 17px;
         letter-spacing: -0.02em;
+        box-shadow: 0 2px 6px rgba(21, 154, 145, 0.35);
     }
-    .brand-title {
+    .brand-name {
         font-size: 1.15rem;
         font-weight: 700;
-        color: #172B4D;
+        color: #F8FAFC !important;
         line-height: 1.2;
     }
-    .brand-subtitle {
-        font-size: 0.78rem;
-        color: #738095;
+    .brand-sub {
+        font-size: 0.76rem;
+        color: #94A3B8 !important;
         font-weight: 500;
     }
 
-    /* Clean Card Component */
-    .saas-card {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        padding: 18px 22px;
-        margin-bottom: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    /* Sidebar Source Card */
+    .source-card {
+        background-color: #18283E;
+        border: 1px solid #223755;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+    }
+    .source-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #F1F5F9;
+        margin-bottom: 4px;
+    }
+    .source-card-meta {
+        font-size: 0.74rem;
+        color: #94A3B8;
     }
 
-    /* Status Badges */
-    .status-badge {
+    /* Status Pills */
+    .pill {
         display: inline-block;
-        padding: 3px 8px;
+        padding: 2px 7px;
         border-radius: 4px;
-        font-size: 0.74rem;
+        font-size: 0.72rem;
         font-weight: 600;
     }
-    .status-active {
+    .pill-teal {
+        background-color: rgba(21, 154, 145, 0.18);
+        color: #2DD4BF !important;
+        border: 1px solid rgba(21, 154, 145, 0.35);
+    }
+    .pill-muted {
+        background-color: #1A2C44;
+        color: #64748B !important;
+        border: 1px solid #273E5D;
+    }
+    .pill-active-light {
         background-color: #ECFDF5;
         color: #065F46;
         border: 1px solid #A7F3D0;
     }
-    .status-inactive {
-        background-color: #F1F5F9;
-        color: #64748B;
-        border: 1px solid #CBD5E1;
-    }
 
-    /* Workspace Status Container */
-    .status-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 0;
-        border-bottom: 1px solid #E2E8F0;
-        font-size: 0.85rem;
-    }
-    .status-row:last-child {
-        border-bottom: none;
-    }
-
-    /* KPI Metric Box */
-    .kpi-container {
+    /* Navigation Tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
         background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 8px;
-        padding: 14px 18px;
-        margin: 10px 0;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-        display: inline-block;
-        min-width: 220px;
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid #E6EAF0;
+        margin-bottom: 22px;
     }
-    .kpi-label {
+    .stTabs [data-baseweb="tab"] {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #778399;
+        padding: 8px 16px;
+        border-radius: 6px;
+        transition: all 0.15s ease;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #F6F8FB !important;
+        color: #159A91 !important;
+        border-bottom: 2px solid #159A91 !important;
+    }
+
+    /* Hero Banner */
+    .hero-panel {
+        background: linear-gradient(180deg, #FFFFFF 0%, #FAFBFD 100%);
+        border: 1px solid #E6EAF0;
+        border-radius: 14px;
+        padding: 24px 28px;
+        margin-bottom: 22px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+    .hero-h1 {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #17243A;
+        letter-spacing: -0.02em;
+        margin-bottom: 6px;
+    }
+    .hero-p {
+        font-size: 0.92rem;
+        color: #778399;
+        margin-bottom: 16px;
+        line-height: 1.5;
+    }
+    .tag-container {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .engine-tag {
+        background-color: #F1F4F9;
+        color: #33455E;
         font-size: 0.75rem;
         font-weight: 600;
-        color: #738095;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid #E2E8F0;
+    }
+
+    /* Suggested Query Cards (Main Area) */
+    .query-card-header {
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 10px;
+    }
+    .qc-sales { color: #159A91; }
+    .qc-docs { color: #2878C7; }
+    .qc-comb { color: #5369D8; }
+
+    /* Custom Query Buttons */
+    .main [data-testid="stColumn"] button {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E6EAF0 !important;
+        border-radius: 10px !important;
+        color: #17243A !important;
+        padding: 14px 16px !important;
+        text-align: left !important;
+        font-size: 0.85rem !important;
+        line-height: 1.4 !important;
+        font-weight: 500 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+        min-height: 72px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: flex-start !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+    .main [data-testid="stColumn"] button:hover {
+        border-color: #159A91 !important;
+        background-color: #FAFDFD !important;
+        box-shadow: 0 3px 6px rgba(21, 154, 145, 0.08) !important;
+        transform: translateY(-1px);
+    }
+
+    /* KPI Display Cards */
+    .kpi-grid-card {
+        background-color: #FFFFFF;
+        border: 1px solid #E6EAF0;
+        border-radius: 12px;
+        padding: 16px 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+    .kpi-title-label {
+        font-size: 0.74rem;
+        font-weight: 600;
+        color: #778399;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin-bottom: 4px;
     }
-    .kpi-value {
+    .kpi-value-num {
         font-size: 1.7rem;
         font-weight: 700;
-        color: #172B4D;
+        color: #17243A;
         letter-spacing: -0.02em;
     }
-
-    /* Clean Prompt Buttons */
-    div[data-testid="stColumn"] button {
-        background-color: #FFFFFF !important;
-        border: 1px solid #E2E8F0 !important;
-        border-radius: 8px !important;
-        color: #172B4D !important;
-        padding: 12px 14px !important;
-        text-align: left !important;
-        font-size: 0.84rem !important;
-        line-height: 1.4 !important;
-        font-weight: 500 !important;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02) !important;
-        min-height: 58px !important;
-        transition: all 0.15s ease !important;
-    }
-    div[data-testid="stColumn"] button:hover {
-        border-color: #238B9E !important;
-        color: #238B9E !important;
-        background-color: #F8FAFC !important;
-        box-shadow: 0 2px 4px rgba(35, 139, 158, 0.08) !important;
+    .kpi-sub-text {
+        font-size: 0.75rem;
+        color: #94A3B8;
+        margin-top: 2px;
     }
 
-    /* Execution Step Badge */
-    .exec-badge {
+    /* Pipeline Step Tracker */
+    .pipeline-bar {
+        display: flex;
+        align-items: center;
+        background-color: #FFFFFF;
+        border: 1px solid #E6EAF0;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin: 14px 0 20px 0;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .pipeline-step {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .step-dot-active {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #159A91;
+    }
+    .step-dot-muted {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #CBD5E1;
+    }
+    .step-arrow {
+        color: #94A3B8;
+        font-size: 0.8rem;
+    }
+
+    /* Execution Badges */
+    .op-badge {
         font-size: 0.72rem;
         font-weight: 600;
-        padding: 2px 6px;
+        padding: 2px 7px;
         border-radius: 4px;
         margin-right: 6px;
     }
-    .exec-pandas { background-color: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
-    .exec-rag { background-color: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
-    .exec-chart { background-color: #FAF5FF; color: #7E22CE; border: 1px solid #E9D5FF; }
+    .op-pandas { background-color: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+    .op-rag { background-color: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
+    .op-chart { background-color: #FAF5FF; color: #7E22CE; border: 1px solid #E9D5FF; }
 
-    /* Custom Streamlit Tab Styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 16px;
-        border-bottom: 1px solid #E2E8F0;
-        margin-bottom: 18px;
-    }
-    .stTabs [data-baseweb="tab"] {
+    /* Clean Chat Message Card */
+    .chat-bubble-user {
+        background-color: #17243A;
+        color: #FFFFFF;
+        padding: 12px 18px;
+        border-radius: 14px 14px 2px 14px;
+        display: inline-block;
+        max-width: 85%;
+        margin-left: auto;
         font-size: 0.92rem;
-        font-weight: 500;
-        color: #738095;
-        padding: 8px 12px;
-    }
-    .stTabs [aria-selected="true"] {
-        color: #238B9E !important;
-        border-bottom-color: #238B9E !important;
-        font-weight: 600;
+        line-height: 1.5;
     }
 </style>
 """, unsafe_allow_html=True)
 
 
 def extract_text_content(content: Any) -> str:
-    """Safely extract plain text from LLM response blocks, stripping internal chart payload comments."""
+    """Safely extract plain text from LLM response blocks, stripping internal chart comments."""
     text = ""
     if isinstance(content, str):
         text = content
@@ -249,7 +411,7 @@ def extract_text_content(content: Any) -> str:
     return re.sub(r"<!-- CHART_JSON:.*? -->", "", text, flags=re.DOTALL).strip()
 
 
-# Session State Initialization
+# Session State Management
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "df" not in st.session_state:
@@ -270,11 +432,10 @@ if "pending_query" not in st.session_state:
     st.session_state.pending_query = None
 
 
-# Helper to recompile agent when state changes
-def ensure_agent_compiled():
+def compile_agent_if_ready():
+    """Compile or re-compile the LangGraph agent when state or credentials update."""
     if st.session_state.api_key.strip():
         try:
-            # Build retriever if document raw text is loaded but retriever not yet built
             if st.session_state.retriever is None and st.session_state.raw_docs is not None:
                 chunks = split_documents(st.session_state.raw_docs)
                 _, retriever = build_vector_store(chunks, api_key=st.session_state.api_key)
@@ -292,69 +453,117 @@ def ensure_agent_compiled():
 
 
 # ==============================================================================
-# SIDEBAR: Workspace & Configuration
+# SIDEBAR: Premium Dark Navy Workspace (#142338)
 # ==============================================================================
 with st.sidebar:
     # 1. Branding
     st.markdown("""
-    <div class="brand-container">
-        <div class="brand-icon">D</div>
+    <div class="brand-unit">
+        <div class="brand-logo">D</div>
         <div>
-            <div class="brand-title">DataSense AI</div>
-            <div class="brand-subtitle">Intelligent Data Analyst</div>
+            <div class="brand-name">DataSense AI</div>
+            <div class="brand-sub">Intelligent Data Analyst</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # 2. LLM Configuration
+    # 2. LLM Engine Configuration
     st.markdown("#### LLM Configuration")
-    input_key = st.text_input(
-        "API Key (Google Gemini)",
+    user_key = st.text_input(
+        "Google Gemini API Key",
         value=st.session_state.api_key,
         type="password",
-        placeholder="Enter your API key...",
+        placeholder="Paste your API key...",
         label_visibility="collapsed"
     )
     st.caption("Press Enter after entering your key to apply.")
-    
-    if input_key != st.session_state.api_key:
-        st.session_state.api_key = input_key.strip()
+
+    if user_key != st.session_state.api_key:
+        st.session_state.api_key = user_key.strip()
         st.session_state.agent = None
-        ensure_agent_compiled()
+        compile_agent_if_ready()
         st.rerun()
+
+    # Live Connection Badge
+    if st.session_state.api_key.strip():
+        st.markdown("<span class='pill pill-teal'>Engine Connected</span>", unsafe_allow_html=True)
+    else:
+        st.markdown("<span class='pill pill-muted'>Key Not Configured</span>", unsafe_allow_html=True)
+
+    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
     # 3. Data Sources Section
     st.markdown("#### Data Sources")
-    if st.button("Load Sample Dataset & Handbook", use_container_width=True):
-        sample_csv_path = os.path.join("sample_data", "sales_data.csv")
-        sample_pdf_path = os.path.join("sample_data", "company_handbook.pdf")
-
-        if os.path.exists(sample_csv_path) and os.path.exists(sample_pdf_path):
+    
+    # Quick Load Demo Action (runs with 0 API key required)
+    if st.button("Load Demo Dataset & Handbook", use_container_width=True):
+        sample_csv = os.path.join("sample_data", "sales_data.csv")
+        sample_pdf = os.path.join("sample_data", "company_handbook.pdf")
+        if os.path.exists(sample_csv) and os.path.exists(sample_pdf):
             try:
-                # Load CSV (no key required)
-                st.session_state.df = pd.read_csv(sample_csv_path)
+                st.session_state.df = pd.read_csv(sample_csv)
                 st.session_state.processed_csv_name = "sales_data.csv"
-
-                # Extract PDF text (no key required)
-                st.session_state.raw_docs = load_pdf_from_path_or_stream(sample_pdf_path, filename="company_handbook.pdf")
+                st.session_state.raw_docs = load_pdf_from_path_or_stream(sample_pdf, filename="company_handbook.pdf")
                 st.session_state.processed_pdf_name = "company_handbook.pdf"
-
-                # If key already configured, compile agent
-                ensure_agent_compiled()
-                st.success("Sample dataset & handbook loaded.")
+                compile_agent_if_ready()
                 st.rerun()
             except Exception as e:
-                st.error(f"Error loading sample data: {str(e)}")
-        else:
-            st.error("Sample files not found on disk.")
+                st.error(f"Error loading demo files: {str(e)}")
 
+    # Distinct CSV Source Card
+    if st.session_state.df is not None:
+        csv_badge = f"<span class='pill pill-teal'>{len(st.session_state.df)} rows • {st.session_state.df.shape[1]} cols</span>"
+        st.markdown(f"""
+        <div class="source-card">
+            <div class="source-card-header">
+                <span>CSV: {st.session_state.processed_csv_name}</span>
+                {csv_badge}
+            </div>
+            <div class="source-card-meta">Transactions & Revenue Metrics</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class="source-card">
+            <div class="source-card-header">
+                <span>Structured Data</span>
+                <span class='pill pill-muted'>None</span>
+            </div>
+            <div class="source-card-meta">Upload CSV or load demo data</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Distinct PDF Source Card
+    if st.session_state.raw_docs is not None:
+        pdf_badge = "<span class='pill pill-teal'>Indexed</span>" if st.session_state.retriever else "<span class='pill pill-teal'>Parsed</span>"
+        st.markdown(f"""
+        <div class="source-card">
+            <div class="source-card-header">
+                <span>PDF: {st.session_state.processed_pdf_name}</span>
+                {pdf_badge}
+            </div>
+            <div class="source-card-meta">{len(st.session_state.raw_docs)} pages • Policies & Terms</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div class="source-card">
+            <div class="source-card-header">
+                <span>Document Knowledge</span>
+                <span class='pill pill-muted'>None</span>
+            </div>
+            <div class="source-card-meta">Upload PDF or load demo data</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Custom Upload Dropzone (Collapsible)
     with st.expander("Upload Custom Files", expanded=False):
-        uploaded_csv = st.file_uploader("Upload CSV Data", type=["csv"])
+        uploaded_csv = st.file_uploader("Upload CSV Dataset", type=["csv"])
         uploaded_pdf = st.file_uploader("Upload PDF Document", type=["pdf"])
 
-        if st.button("Process Uploaded Files", use_container_width=True):
+        if st.button("Process Files", use_container_width=True):
             if not uploaded_csv and not uploaded_pdf:
-                st.warning("Please select at least one file to upload.")
+                st.warning("Please select at least one file.")
             else:
                 try:
                     if uploaded_csv is not None:
@@ -363,63 +572,21 @@ with st.sidebar:
                     if uploaded_pdf is not None:
                         st.session_state.raw_docs = load_pdf_from_path_or_stream(uploaded_pdf, filename=uploaded_pdf.name)
                         st.session_state.processed_pdf_name = uploaded_pdf.name
-
-                    ensure_agent_compiled()
-                    st.success("Custom files processed successfully.")
+                    compile_agent_if_ready()
                     st.rerun()
                 except Exception as e:
-                    st.error(f"File processing error: {str(e)}")
+                    st.error(f"Upload error: {str(e)}")
 
-    # 4. Workspace Status Section
-    st.markdown("#### Workspace Status")
-    
-    # LLM Status
-    llm_status = "<span class='status-badge status-active'>Connected</span>" if st.session_state.api_key else "<span class='status-badge status-inactive'>Not Configured</span>"
-    st.markdown(f"""
-    <div class="status-row">
-        <span><b>LLM Engine:</b> Gemini</span>
-        {llm_status}
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
 
-    # CSV Status
-    if st.session_state.df is not None:
-        csv_badge = "<span class='status-badge status-active'>Loaded</span>"
-        csv_info = f"{st.session_state.processed_csv_name} ({len(st.session_state.df)} rows, {st.session_state.df.shape[1]} cols)"
-    else:
-        csv_badge = "<span class='status-badge status-inactive'>Not Loaded</span>"
-        csv_info = "No CSV file loaded"
-    st.markdown(f"""
-    <div class="status-row">
-        <span><b>Structured CSV:</b></span>
-        {csv_badge}
-    </div>
-    <div class="muted-text" style="padding-bottom: 6px;">{csv_info}</div>
-    """, unsafe_allow_html=True)
-
-    # PDF Status
-    if st.session_state.raw_docs is not None:
-        pdf_badge = "<span class='status-badge status-active'>Indexed</span>" if st.session_state.retriever else "<span class='status-badge status-active'>Parsed</span>"
-        pdf_info = f"{st.session_state.processed_pdf_name} ({len(st.session_state.raw_docs)} pages)"
-    else:
-        pdf_badge = "<span class='status-badge status-inactive'>Not Indexed</span>"
-        pdf_info = "No PDF document loaded"
-    st.markdown(f"""
-    <div class="status-row">
-        <span><b>Document Base:</b></span>
-        {pdf_badge}
-    </div>
-    <div class="muted-text" style="padding-bottom: 8px;">{pdf_info}</div>
-    """, unsafe_allow_html=True)
-
-    # 5. Session Controls
+    # 4. Session Controls
     st.markdown("#### Session Controls")
-    col_sc1, col_sc2 = st.columns(2)
-    with col_sc1:
+    c_col1, c_col2 = st.columns(2)
+    with c_col1:
         if st.button("Clear Chat", use_container_width=True):
             st.session_state.messages = []
             st.rerun()
-    with col_sc2:
+    with c_col2:
         if st.button("Reset Data", use_container_width=True):
             st.session_state.df = None
             st.session_state.raw_docs = None
@@ -435,17 +602,21 @@ with st.sidebar:
 # MAIN WORKSPACE: Header & Tabs
 # ==============================================================================
 
-# Compact Header
-st.markdown("""
-<div class="saas-card" style="padding: 16px 20px; margin-bottom: 18px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+# Compact Header Banner
+agent_ready = st.session_state.agent is not None
+readiness_badge = "<span class='pill pill-active-light'>Agent Ready</span>" if agent_ready else "<span class='pill' style='background:#F1F4F9; color:#475569;'>Awaiting Key / Data</span>"
+data_summary = f"{st.session_state.processed_csv_name or 'No CSV'} &bull; {st.session_state.processed_pdf_name or 'No PDF'}"
+
+st.markdown(f"""
+<div class="saas-card" style="padding: 16px 22px; margin-bottom: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
-            <div style="font-size: 1.35rem; font-weight: 700; color: #172B4D;">DataSense AI</div>
-            <div style="font-size: 0.88rem; color: #738095;">Explore your structured data and business documents using natural-language questions.</div>
+            <div style="font-size: 1.35rem; font-weight: 700; color: #17243A; letter-spacing: -0.02em;">DataSense AI</div>
+            <div style="font-size: 0.88rem; color: #778399;">Enterprise AI Data Analyst &bull; {data_summary}</div>
         </div>
-        <div style="display: flex; gap: 8px;">
-            <span class="status-badge status-active">LangGraph Orchestrated</span>
-            <span class="status-badge status-active">ChromaDB RAG</span>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            {readiness_badge}
+            <span class='pill' style='background:#F1F4F9; color:#33455E; border:1px solid #E2E8F0;'>LangGraph &bull; ChromaDB</span>
         </div>
     </div>
 </div>
@@ -455,7 +626,7 @@ st.markdown("""
 tab_ask, tab_explorer, tab_docs = st.tabs(["Ask Data", "Data Explorer", "Document Library"])
 
 
-# Dynamic Visual Widgets Helper
+# Helper: Dynamic Chart & Visual Widget Rendering
 def render_dynamic_visuals(tools_called: list, df: pd.DataFrame):
     """Render dynamic charts, KPI cards, or tables based on executed tools."""
     if df is None:
@@ -471,7 +642,7 @@ def render_dynamic_visuals(tools_called: list, df: pd.DataFrame):
             try:
                 payload = json.loads(chart_match.group(1))
                 chart_type = payload.get("chart_type", "bar")
-                title = payload.get("title", "Chart")
+                title = payload.get("title", "Data Visualization")
                 x_label = payload.get("x_label", "Category")
                 y_label = payload.get("y_label", "Value")
                 chart_df = pd.DataFrame(payload.get("data", []))
@@ -482,34 +653,35 @@ def render_dynamic_visuals(tools_called: list, df: pd.DataFrame):
                     chart_data.columns = [y_label]
 
                     if chart_type == "line":
-                        st.line_chart(chart_data, color="#238B9E", use_container_width=True)
+                        st.line_chart(chart_data, color="#159A91", use_container_width=True)
                     elif chart_type == "area":
-                        st.area_chart(chart_data, color="#2878C7", use_container_width=True)
+                        st.area_chart(chart_data, color="#5369D8", use_container_width=True)
                     else:
-                        st.bar_chart(chart_data, color="#238B9E", use_container_width=True)
+                        st.bar_chart(chart_data, color="#159A91", use_container_width=True)
                     continue
             except Exception:
                 pass
 
-        # 2. Revenue analysis fallback visual
+        # 2. Revenue Analysis Widget
         if tool_name == "get_revenue_analysis":
             try:
                 total_rev = df["revenue"].sum() if "revenue" in df.columns else 0
                 st.markdown(f"""
-                <div class="kpi-container">
-                    <div class="kpi-label">Total Revenue</div>
-                    <div class="kpi-value">${total_rev:,.2f}</div>
+                <div class="kpi-grid-card" style="display: inline-block; min-width: 230px; margin: 8px 0;">
+                    <div class="kpi-title-label">Total Revenue</div>
+                    <div class="kpi-value-num">${total_rev:,.2f}</div>
+                    <div class="kpi-sub-text">Across {len(df)} transactions</div>
                 </div>
                 """, unsafe_allow_html=True)
                 if "category" in df.columns and "revenue" in df.columns:
                     cat_rev = df.groupby("category")["revenue"].sum().reset_index().set_index("category")
                     cat_rev.columns = ["Revenue ($)"]
                     st.caption("**Revenue Breakdown by Category**")
-                    st.bar_chart(cat_rev, color="#238B9E", use_container_width=True)
+                    st.bar_chart(cat_rev, color="#159A91", use_container_width=True)
             except Exception:
                 pass
 
-        # 3. Monthly trend fallback visual
+        # 3. Monthly Revenue Trend Widget
         elif tool_name == "get_monthly_revenue_trend":
             try:
                 date_col = next((c for c in ["order_date", "date", "OrderDate"] if c in df.columns), None)
@@ -520,12 +692,12 @@ def render_dynamic_visuals(tools_called: list, df: pd.DataFrame):
                     df_copy["Month"] = df_copy["pdate"].dt.strftime("%Y-%m")
                     m_rev = df_copy.groupby("Month")["revenue"].sum().reset_index().set_index("Month")
                     m_rev.columns = ["Revenue ($)"]
-                    st.caption("**Monthly Revenue Trend (2024)**")
-                    st.line_chart(m_rev, color="#238B9E", use_container_width=True)
+                    st.caption("**Monthly Revenue Trajectory (Chronological)**")
+                    st.line_chart(m_rev, color="#159A91", use_container_width=True)
             except Exception:
                 pass
 
-        # 4. Top products fallback visual
+        # 4. Top Products Widget
         elif tool_name == "get_top_products":
             try:
                 if "product" in df.columns and "revenue" in df.columns:
@@ -544,23 +716,22 @@ def render_dynamic_visuals(tools_called: list, df: pd.DataFrame):
                 pass
 
 
-# Execution Details Formatter
+# Helper: Factual Execution Details Formatter
 def render_execution_details(tools_called: list):
     """Render factual tool execution details in a clean expandable section."""
     with st.expander(f"How the agent handled this query ({len(tools_called)} operations)", expanded=False):
         for tool_call in tools_called:
             name = tool_call.get("name", "tool")
             clean_output = re.sub(r"<!-- CHART_JSON:.*? -->", "", tool_call.get("output", ""), flags=re.DOTALL).strip()
-            
-            # Categorize operation
+
             if name == "retrieve_document_knowledge":
-                badge = "<span class='exec-badge exec-rag'>Document RAG</span>"
-                desc = "Retrieved policy chunks and source page metadata from ChromaDB vector store."
+                badge = "<span class='op-badge op-rag'>Document RAG</span>"
+                desc = "Retrieved policy chunks and page citations from ChromaDB vector store."
             elif name == "plot_chart":
-                badge = "<span class='exec-badge exec-chart'>Data Visualization</span>"
+                badge = "<span class='op-badge op-chart'>Data Visualization</span>"
                 desc = "Computed aggregated metrics and dynamically plotted chart from dataset."
             else:
-                badge = "<span class='exec-badge exec-pandas'>CSV / Pandas Analysis</span>"
+                badge = "<span class='op-badge op-pandas'>CSV / Pandas Analysis</span>"
                 desc = f"Executed deterministic analytical computation via Pandas tool '{name}'."
 
             st.markdown(f"{badge} **{name}**", unsafe_allow_html=True)
@@ -569,36 +740,54 @@ def render_execution_details(tools_called: list):
 
 
 # ==============================================================================
-# TAB 1: ASK DATA (Conversational Interface)
+# TAB 1: ASK DATA (Conversational Workspace)
 # ==============================================================================
 with tab_ask:
-    # Empty State: Suggested Queries in 3 Categories
+    # Empty State: Modern Welcome Panel & 3-Category Query Cards
     if len(st.session_state.messages) == 0:
-        st.markdown('<div class="muted-text" style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;">Suggested Inquiries</div>', unsafe_allow_html=True)
-        
-        sq_col1, sq_col2, sq_col3 = st.columns(3)
-        
-        with sq_col1:
-            st.markdown("**Sales Analytics**")
-            if st.button("Top Product by Revenue\nIdentify highest earning product", key="sq_top_prod", use_container_width=True):
+        st.markdown("""
+        <div class="hero-panel">
+            <div class="hero-h1">Your data has answers. Let's find them.</div>
+            <div class="hero-p">Ask complex questions across your sales transactions and operational PDF handbooks using natural language.</div>
+            <div class="tag-container">
+                <span class="engine-tag">LangGraph State Machine</span>
+                <span class="engine-tag">ChromaDB Vector Retrieval</span>
+                <span class="engine-tag">Deterministic Pandas Analysis</span>
+                <span class="engine-tag">Dynamic Visualization Engine</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown('<div class="query-card-header qc-sales">Sales Analytics</div>', unsafe_allow_html=True)
+        col_s1, col_s2, col_s3 = st.columns(3)
+        with col_s1:
+            if st.button("Top Product by Revenue\nIdentify the highest earning product", key="btn_q_top", use_container_width=True):
                 st.session_state.pending_query = "Which product generated the highest revenue?"
-            if st.button("Monthly Revenue Trend\nView chronological sales trajectory", key="sq_monthly", use_container_width=True):
+        with col_s2:
+            if st.button("Monthly Revenue Trend\nView chronological sales trajectory across 2024", key="btn_q_month", use_container_width=True):
                 st.session_state.pending_query = "Show the monthly revenue trend."
-            if st.button("Regional Sales Comparison\nCompare performance across regions", key="sq_region", use_container_width=True):
+        with col_s3:
+            if st.button("Regional Sales Comparison\nCompare performance and orders across regions", key="btn_q_reg", use_container_width=True):
                 st.session_state.pending_query = "Which region generated the highest sales?"
 
-        with sq_col2:
-            st.markdown("**Document Search**")
-            if st.button("Electronics Return Policy\nCheck return window & restocking fees", key="sq_ret_policy", use_container_width=True):
+        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+        st.markdown('<div class="query-card-header qc-docs">Document Search</div>', unsafe_allow_html=True)
+        col_d1, col_d2 = st.columns(2)
+        with col_d1:
+            if st.button("Electronics Return Policy\nCheck return window, condition rules, and restocking fees", key="btn_q_ret", use_container_width=True):
                 st.session_state.pending_query = "What is the return policy for electronics?"
-            if st.button("Warranty Terms & Conditions\nInspect hardware and battery coverage", key="sq_warranty", use_container_width=True):
+        with col_d2:
+            if st.button("Warranty Terms & Conditions\nInspect hardware, battery, and structural coverage", key="btn_q_warr", use_container_width=True):
                 st.session_state.pending_query = "What are the warranty conditions?"
 
-        with sq_col3:
-            st.markdown("**Combined Intelligence**")
-            if st.button("Top Product & Return Policy\nJoint analysis of transactions and PDF", key="sq_comb_prod", use_container_width=True):
+        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+        st.markdown('<div class="query-card-header qc-comb">Combined Intelligence (Multi-Source Reasoning)</div>', unsafe_allow_html=True)
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            if st.button("Top Product & Return Policy\nJoint analysis finding top product and its return policy", key="btn_q_comb1", use_container_width=True):
                 st.session_state.pending_query = "Which electronics product generated the highest revenue, and what is its return policy?"
-            if st.button("Category Sales & Discounts\nCheck top category and bulk discount terms", key="sq_comb_disc", use_container_width=True):
+        with col_c2:
+            if st.button("Category Sales & Volume Discounts\nCheck highest earning category and bulk pricing rules", key="btn_q_comb2", use_container_width=True):
                 st.session_state.pending_query = "Which category has the highest revenue, and does it have a special discount policy?"
 
         st.markdown("---")
@@ -614,33 +803,33 @@ with tab_ask:
             if msg.get("tools_called"):
                 render_execution_details(msg["tools_called"])
 
-    # Chat Input
-    user_query = st.chat_input("Ask a question about sales transactions, company policies, or both...")
+    # Chat Composer Input
+    user_query = st.chat_input("Ask an analytical question or search company policy handbook...")
 
-    # Process pending query triggered by suggested card
+    # Process query triggered by suggested card
     if st.session_state.pending_query:
         user_query = st.session_state.pending_query
         st.session_state.pending_query = None
 
     if user_query:
         if not st.session_state.api_key.strip():
-            st.error("Please enter and apply your Gemini API Key in the sidebar before asking questions.")
+            st.error("Please enter your Gemini API Key in the sidebar before asking questions.")
             st.stop()
 
         if st.session_state.agent is None:
-            ensure_agent_compiled()
+            compile_agent_if_ready()
             if st.session_state.agent is None:
-                st.error("Failed to compile agent. Verify your API key and data sources.")
+                st.error("Agent initialization failed. Please verify your API key and data sources.")
                 st.stop()
 
-        # Append and Display User Query
+        # Append & Display User Message
         st.session_state.messages.append({"role": "user", "content": user_query})
         with st.chat_message("user"):
             st.markdown(user_query)
 
         # Execute Agent Workflow
         with st.chat_message("assistant"):
-            with st.spinner("Analyzing structured data and document knowledge..."):
+            with st.spinner("Analyzing structured transactions and document knowledge..."):
                 try:
                     graph_messages = [SystemMessage(content=SYSTEM_PROMPT)]
                     for past_msg in st.session_state.messages:
@@ -649,13 +838,14 @@ with tab_ask:
                         elif past_msg["role"] == "assistant":
                             graph_messages.append(AIMessage(content=past_msg["content"]))
 
+                    # Invoke LangGraph
                     result = st.session_state.agent.invoke({"messages": graph_messages})
 
                     all_msgs = result["messages"]
                     final_ai_msg = all_msgs[-1]
                     response_text = extract_text_content(final_ai_msg.content)
 
-                    # Collect tools called
+                    # Extract tools called
                     tools_called = []
                     for m in all_msgs:
                         if hasattr(m, "name") and m.name:
@@ -664,17 +854,18 @@ with tab_ask:
                                 "output": str(m.content)
                             })
 
+                    # Render Text Response
                     st.markdown(response_text)
 
-                    # Dynamic Visualizations
+                    # Render Dynamic Charts / Tables
                     if tools_called and st.session_state.df is not None:
                         render_dynamic_visuals(tools_called, st.session_state.df)
 
-                    # Execution Details
+                    # Render Factual Execution Trace
                     if tools_called:
                         render_execution_details(tools_called)
 
-                    # Persist response
+                    # Store in conversation state
                     st.session_state.messages.append({
                         "role": "assistant",
                         "content": response_text,
@@ -692,46 +883,102 @@ with tab_ask:
 
 
 # ==============================================================================
-# TAB 2: DATA EXPLORER
+# TAB 2: DATA EXPLORER (Business Intelligence Dashboard)
 # ==============================================================================
 with tab_explorer:
     if st.session_state.df is not None:
         df = st.session_state.df
-        
-        # Summary KPI Cards
-        st.markdown("#### Dataset Overview")
+
+        # 4 Prominent KPI Metric Cards
+        st.markdown("#### Key Performance Indicators")
         k_col1, k_col2, k_col3, k_col4 = st.columns(4)
+
         with k_col1:
-            st.metric("Total Records", f"{len(df):,}")
+            st.markdown(f"""
+            <div class="kpi-grid-card">
+                <div class="kpi-title-label">Total Records</div>
+                <div class="kpi-value-num">{len(df):,}</div>
+                <div class="kpi-sub-text">Transactions logged</div>
+            </div>
+            """, unsafe_allow_html=True)
+
         with k_col2:
-            st.metric("Total Columns", f"{df.shape[1]}")
+            st.markdown(f"""
+            <div class="kpi-grid-card">
+                <div class="kpi-title-label">Total Attributes</div>
+                <div class="kpi-value-num">{df.shape[1]}</div>
+                <div class="kpi-sub-text">Dataset columns</div>
+            </div>
+            """, unsafe_allow_html=True)
+
         with k_col3:
             total_rev = df["revenue"].sum() if "revenue" in df.columns else 0
-            st.metric("Total Revenue", f"${total_rev:,.2f}")
+            st.markdown(f"""
+            <div class="kpi-grid-card">
+                <div class="kpi-title-label">Total Revenue</div>
+                <div class="kpi-value-num">${total_rev:,.2f}</div>
+                <div class="kpi-sub-text">Cumulative sales value</div>
+            </div>
+            """, unsafe_allow_html=True)
+
         with k_col4:
             avg_order = df["revenue"].mean() if "revenue" in df.columns else 0
-            st.metric("Average Transaction", f"${avg_order:,.2f}")
+            st.markdown(f"""
+            <div class="kpi-grid-card">
+                <div class="kpi-title-label">Avg Transaction</div>
+                <div class="kpi-value-num">${avg_order:,.2f}</div>
+                <div class="kpi-sub-text">Mean ticket size</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
+
+        # Balanced 2-Column Chart Layout
+        st.markdown("#### Exploratory Visualizations")
+        chart_col1, chart_col2 = st.columns(2)
+
+        with chart_col1:
+            st.markdown("**Chart A: Monthly Revenue Trend**")
+            date_col = next((c for c in ["order_date", "date", "OrderDate"] if c in df.columns), None)
+            if date_col and "revenue" in df.columns:
+                df_copy = df.copy()
+                df_copy["pdate"] = pd.to_datetime(df_copy[date_col], errors="coerce")
+                df_copy = df_copy.dropna(subset=["pdate"])
+                df_copy["Month"] = df_copy["pdate"].dt.strftime("%Y-%m")
+                monthly_chart = df_copy.groupby("Month")["revenue"].sum().reset_index().set_index("Month")
+                monthly_chart.columns = ["Revenue ($)"]
+                st.line_chart(monthly_chart, color="#159A91", use_container_width=True)
+            else:
+                st.caption("Date or revenue column not found.")
+
+        with chart_col2:
+            st.markdown("**Chart B: Category-wise Revenue**")
+            if "category" in df.columns and "revenue" in df.columns:
+                cat_chart = df.groupby("category")["revenue"].sum().reset_index().set_index("category")
+                cat_chart.columns = ["Revenue ($)"]
+                st.bar_chart(cat_chart, color="#5369D8", use_container_width=True)
+            else:
+                st.caption("Category or revenue column not found.")
 
         st.markdown("---")
 
-        # Scrollable Dataset Preview
+        # Dataset Preview & Export Section
         st.markdown(f"#### Active Dataset: `{st.session_state.processed_csv_name}`")
         st.dataframe(df, use_container_width=True, height=280)
 
-        # Download CSV Action
+        # CSV Download Action
         csv_bytes = df.to_csv(index=False).encode("utf-8")
         st.download_button(
             label="Download Dataset as CSV",
             data=csv_bytes,
             file_name=f"export_{st.session_state.processed_csv_name or 'sales_data.csv'}",
-            mime="text/csv",
-            help="Download the active dataset directly to your local computer."
+            mime="text/csv"
         )
 
         st.markdown("---")
 
-        # Schema & Column Metadata
-        st.markdown("#### Column Metadata & Integrity")
+        # Column Schema & Missing Values
+        st.markdown("#### Schema & Data Integrity")
         schema_df = pd.DataFrame({
             "Column Name": df.columns,
             "Data Type": [str(t) for t in df.dtypes],
@@ -741,70 +988,122 @@ with tab_explorer:
         })
         st.dataframe(schema_df, hide_index=True, use_container_width=True)
 
-        st.markdown("---")
-
-        # Built-in Exploratory Charts
-        st.markdown("#### Exploratory Visualizations")
-        c_col1, c_col2 = st.columns(2)
-        with c_col1:
-            if "category" in df.columns and "revenue" in df.columns:
-                st.caption("Revenue by Category")
-                cat_chart = df.groupby("category")["revenue"].sum().reset_index().set_index("category")
-                st.bar_chart(cat_chart, color="#238B9E")
-        with c_col2:
-            if "region" in df.columns and "revenue" in df.columns:
-                st.caption("Revenue by Geographic Region")
-                reg_chart = df.groupby("region")["revenue"].sum().reset_index().set_index("region")
-                st.bar_chart(reg_chart, color="#2878C7")
-
     else:
         st.markdown("""
-        <div class="saas-card" style="text-align: center; padding: 36px 20px;">
-            <div style="font-size: 1.1rem; font-weight: 600; color: #172B4D; margin-bottom: 6px;">No Structured Dataset Loaded</div>
-            <div class="muted-text">Upload a CSV file or click 'Load Sample Dataset & Handbook' in the sidebar to begin analyzing your data.</div>
+        <div class="saas-card" style="text-align: center; padding: 48px 24px;">
+            <div style="font-size: 1.15rem; font-weight: 700; color: #17243A; margin-bottom: 8px;">No Structured Dataset Loaded</div>
+            <div style="color: #778399; font-size: 0.9rem;">Click 'Load Demo Dataset & Handbook' in the sidebar or upload a CSV file to inspect data and charts.</div>
         </div>
         """, unsafe_allow_html=True)
 
 
 # ==============================================================================
-# TAB 3: DOCUMENT LIBRARY
+# TAB 3: DOCUMENT LIBRARY (Document Intelligence Workspace)
 # ==============================================================================
 with tab_docs:
     if st.session_state.raw_docs is not None:
         docs = st.session_state.raw_docs
-        
-        st.markdown(f"#### Active Document: `{st.session_state.processed_pdf_name}`")
-        
-        d_col1, d_col2, d_col3 = st.columns(3)
-        with d_col1:
-            st.metric("Total Pages Extracted", f"{len(docs)}")
-        with d_col2:
-            chunk_count = len(split_documents(docs))
-            st.metric("Indexed Chunks", f"{chunk_count}")
-        with d_col3:
-            v_status = "ChromaDB Connected" if st.session_state.retriever else "Parsed (Awaiting Key)"
-            st.metric("Vector Index", v_status)
+        chunks = split_documents(docs)
+        is_indexed = st.session_state.retriever is not None
 
-        st.markdown("---")
+        # Document Collection Card
+        st.markdown(f"#### Document Collection: `{st.session_state.processed_pdf_name}`")
 
-        # Document Page Viewer
-        st.markdown("#### Document Content Viewer")
-        page_options = [f"Page {doc.metadata.get('page', idx + 1)}" for idx, doc in enumerate(docs)]
-        selected_page_str = st.selectbox("Select Page to Inspect", options=page_options)
-        
-        selected_idx = page_options.index(selected_page_str)
-        selected_doc = docs[selected_idx]
+        doc_kpi1, doc_kpi2, doc_kpi3 = st.columns(3)
+        with doc_kpi1:
+            st.markdown(f"""
+            <div class="kpi-grid-card">
+                <div class="kpi-title-label">Extracted Pages</div>
+                <div class="kpi-value-num">{len(docs)}</div>
+                <div class="kpi-sub-text">Parsed from PDF</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with doc_kpi2:
+            st.markdown(f"""
+            <div class="kpi-grid-card">
+                <div class="kpi-title-label">Indexed Chunks</div>
+                <div class="kpi-value-num">{len(chunks)}</div>
+                <div class="kpi-sub-text">Recursive character splits</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with doc_kpi3:
+            idx_label = "ChromaDB Active" if is_indexed else "Parsed (Awaiting Key)"
+            idx_sub = "Vector retrieval enabled" if is_indexed else "Enter API key to generate vectors"
+            st.markdown(f"""
+            <div class="kpi-grid-card">
+                <div class="kpi-title-label">Index Status</div>
+                <div class="kpi-value-num" style="font-size: 1.35rem;">{idx_label}</div>
+                <div class="kpi-sub-text">{idx_sub}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
+
+        # Accurate 5-Stage Indexing Pipeline Tracker
+        dot_up = "<span class='step-dot-active'></span>"
+        dot_ext = "<span class='step-dot-active'></span>"
+        dot_chk = "<span class='step-dot-active'></span>"
+        dot_emb = "<span class='step-dot-active'></span>" if is_indexed else "<span class='step-dot-muted'></span>"
+        dot_idx = "<span class='step-dot-active'></span>" if is_indexed else "<span class='step-dot-muted'></span>"
+        emb_label = "Embeddings Generated" if is_indexed else "Embeddings (Awaiting Key)"
+        idx_step_label = "Vector Indexed" if is_indexed else "ChromaDB Indexing"
 
         st.markdown(f"""
-        <div class="saas-card" style="background-color: #FFFFFF; font-family: monospace; font-size: 0.88rem; line-height: 1.6; white-space: pre-wrap;">
-{selected_doc.page_content}
+        <div class="pipeline-bar">
+            <div class="pipeline-step">{dot_up} PDF Uploaded</div>
+            <span class="step-arrow">&rarr;</span>
+            <div class="pipeline-step">{dot_ext} Text Extracted</div>
+            <span class="step-arrow">&rarr;</span>
+            <div class="pipeline-step">{dot_chk} Chunked ({len(chunks)})</div>
+            <span class="step-arrow">&rarr;</span>
+            <div class="pipeline-step">{dot_emb} {emb_label}</div>
+            <span class="step-arrow">&rarr;</span>
+            <div class="pipeline-step">{dot_idx} {idx_step_label}</div>
         </div>
         """, unsafe_allow_html=True)
 
+        # Split Document Viewer
+        st.markdown("#### Document Content Viewer")
+        split_col1, split_col2 = st.columns([1, 2])
+
+        with split_col1:
+            st.markdown("**Document Index & Page Selector**")
+            page_labels = [f"Page {doc.metadata.get('page', i + 1)}" for i, doc in enumerate(docs)]
+            selected_page_label = st.radio("Select Page to Inspect", options=page_labels, label_visibility="collapsed")
+            selected_idx = page_labels.index(selected_page_label)
+            selected_doc = docs[selected_idx]
+
+            st.caption(f"Source: `{selected_doc.metadata.get('source', 'document.pdf')}`")
+            st.caption(f"Character length: {len(selected_doc.page_content)} chars")
+
+        with split_col2:
+            st.markdown(f"**Content Preview ({selected_page_label})**")
+            st.markdown(f"""
+            <div class="saas-card" style="background-color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, monospace; font-size: 0.88rem; line-height: 1.6; white-space: pre-wrap; height: 340px; overflow-y: auto;">
+{selected_doc.page_content}
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("---")
+
+        # Chunk Sample Inspector
+        st.markdown("#### Vector Chunk Inspector")
+        st.caption("Inspect how RecursiveCharacterTextSplitter partitions document pages into retrieval units.")
+        chunk_preview_df = pd.DataFrame([
+            {
+                "Chunk #": i + 1,
+                "Page": c.metadata.get("page", 1),
+                "Characters": len(c.page_content),
+                "Text Excerpt": c.page_content[:120] + "..."
+            }
+            for i, c in enumerate(chunks[:6])
+        ])
+        st.dataframe(chunk_preview_df, hide_index=True, use_container_width=True)
+
     else:
         st.markdown("""
-        <div class="saas-card" style="text-align: center; padding: 36px 20px;">
-            <div style="font-size: 1.1rem; font-weight: 600; color: #172B4D; margin-bottom: 6px;">No Document Knowledge Base Loaded</div>
-            <div class="muted-text">Upload a PDF handbook or click 'Load Sample Dataset & Handbook' in the sidebar to enable document retrieval.</div>
+        <div class="saas-card" style="text-align: center; padding: 48px 24px;">
+            <div style="font-size: 1.15rem; font-weight: 700; color: #17243A; margin-bottom: 8px;">No Document Knowledge Base Loaded</div>
+            <div style="color: #778399; font-size: 0.9rem;">Click 'Load Demo Dataset & Handbook' in the sidebar or upload a PDF to inspect pages and RAG indexing.</div>
         </div>
         """, unsafe_allow_html=True)
