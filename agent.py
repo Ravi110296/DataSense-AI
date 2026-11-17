@@ -9,6 +9,7 @@ Implements:
 """
 
 import os
+import json
 from typing import Optional, List, Dict, Any
 import pandas as pd
 
@@ -28,6 +29,8 @@ SYSTEM_PROMPT = """You are an Intelligent Data Analyst Assistant capable of answ
 Guidelines:
 - Analyze user requests carefully to determine which tool or combination of tools is required.
 - For quantitative, numerical, or sales inquiries (revenue, top products, trends, regions), invoke the appropriate data analysis tool.
+- For requests asking to plot, graph, visualize, or compare metrics visually (e.g. 'plot sales by region', 'show a line chart of orders', 'visualize revenue by category'):
+  Invoke the 'plot_chart' tool, specifying the chart_type ('bar', 'line', or 'area'), x_column, y_column, title, and aggregation ('sum', 'mean', or 'count').
 - For business policies, return conditions, warranties, discounts, or terms, invoke the 'retrieve_document_knowledge' tool.
 - For COMBINED queries (e.g., 'Which electronics product generated the highest revenue, and what is its return policy?'):
   1. First invoke the data analysis tool to discover the specific product or category.
@@ -215,6 +218,77 @@ def create_analyst_tools(df: Optional[pd.DataFrame], retriever: Optional[Any]) -
         return "\n".join(lines)
 
     @tool
+    def plot_chart(
+        chart_type: str,
+        x_column: str,
+        y_column: str,
+        title: str,
+        aggregation: str = "sum",
+        category_filter: Optional[str] = None
+    ) -> str:
+        """
+        Create a dynamic data visualization chart from the active CSV dataset.
+        chart_type: 'bar', 'line', or 'area'.
+        x_column: Column name for X-axis (e.g. 'product', 'category', 'region', 'order_date', 'month').
+        y_column: Numerical column for Y-axis (e.g. 'revenue', 'quantity', 'unit_price').
+        title: Clear title for the chart.
+        aggregation: 'sum', 'mean', or 'count' (default: 'sum').
+        category_filter: Optional category name to filter the dataset before plotting.
+        """
+        if df is None or df.empty:
+            return "No dataset loaded to plot. Please upload a CSV file."
+
+        col_map = {c.lower(): c for c in df.columns}
+        actual_x = col_map.get(x_column.lower())
+        actual_y = col_map.get(y_column.lower())
+
+        if not actual_x or not actual_y:
+            return f"Columns '{x_column}' or '{y_column}' not found. Available columns: {list(df.columns)}"
+
+        working_df = df.copy()
+
+        if category_filter and "category" in col_map:
+            cat_col = col_map["category"]
+            mask = working_df[cat_col].astype(str).str.strip().str.lower() == category_filter.strip().lower()
+            working_df = working_df[mask]
+            if working_df.empty:
+                return f"No records found matching category filter '{category_filter}'."
+
+        if "date" in actual_x.lower():
+            working_df["parsed_x"] = pd.to_datetime(working_df[actual_x], errors="coerce")
+            working_df = working_df.dropna(subset=["parsed_x"])
+            working_df["x_display"] = working_df["parsed_x"].dt.strftime("%Y-%m")
+            actual_x = "x_display"
+
+        agg_func = aggregation.lower() if aggregation.lower() in ["sum", "mean", "count"] else "sum"
+        grouped = working_df.groupby(actual_x)[actual_y].agg(agg_func).reset_index()
+        grouped.columns = ["x", "y"]
+        grouped["y"] = grouped["y"].round(2)
+
+        if actual_x == "x_display":
+            grouped = grouped.sort_values(by="x")
+        else:
+            grouped = grouped.sort_values(by="y", ascending=False)
+
+        chart_payload = {
+            "type": "chart_payload",
+            "chart_type": chart_type.lower() if chart_type.lower() in ["bar", "line", "area"] else "bar",
+            "title": title,
+            "x_label": x_column,
+            "y_label": f"{y_column} ({agg_func})",
+            "data": grouped.to_dict(orient="records")
+        }
+
+        summary_text = (
+            f"Generated chart '{title}' ({chart_type.upper()}) plotting {y_column} by {x_column}.\n"
+            f"Summary breakdown:\n"
+        )
+        for _, row in grouped.head(4).iterrows():
+            summary_text += f"  - {row['x']}: {row['y']}\n"
+
+        return f"{summary_text}\n<!-- CHART_JSON:{json.dumps(chart_payload)} -->"
+
+    @tool
     def retrieve_document_knowledge(query: str) -> str:
         """
         Retrieve relevant business policies, return guidelines, warranty details,
@@ -237,6 +311,7 @@ def create_analyst_tools(df: Optional[pd.DataFrame], retriever: Optional[Any]) -
         get_top_products,
         get_monthly_revenue_trend,
         get_regional_analysis,
+        plot_chart,
         retrieve_document_knowledge
     ]
 
