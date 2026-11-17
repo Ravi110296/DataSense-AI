@@ -1,14 +1,11 @@
 """
 app.py - DataSense AI: Intelligent Data Analyst Agent.
 
-Premium Enterprise SaaS Interface:
+Enterprise SaaS Interface:
 - Palette: #F6F8FB canvas, #142338 dark navy sidebar, #FFFFFF cards, #17243A deep navy text, #159A91 teal primary accent, #5369D8 secondary accent.
 - Preserves full existing backend: LangChain tools, LangGraph state graph, Pandas analytics, and ChromaDB RAG.
-- Distinctive Dark Navy Sidebar: Branding, LLM Configuration, Visual Source Cards, Real-time Status, Session Controls.
-- 3 Dedicated Enterprise Tabs:
-    1. Ask Data: Modern AI assistant workspace, suggested query cards, dynamic charts, and factual execution traces.
-    2. Data Explorer: Business Intelligence dashboard with KPI cards, 2-column charts, interactive dataset preview, and CSV export.
-    3. Document Library: Document intelligence workspace with visual indexing pipeline, metadata, and page inspection reader.
+- Sidebar Navigation: Clearly distinguishable navigation for Ask Data, Data Explorer, and Document Library.
+- Fixed Bottom Chat Input: Chat input remains permanently anchored at the bottom, never moving or splitting messages.
 """
 
 import os
@@ -39,7 +36,7 @@ st.set_page_config(
 # Premium Enterprise SaaS Styling
 st.markdown("""
 <style>
-    /* Font & Global Typography */
+    /* Font & Global Reset */
     html, body, [class*="css"] {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
@@ -47,7 +44,7 @@ st.markdown("""
     /* Viewport clearance: prevents any top header cut-off */
     .block-container {
         padding-top: 4.2rem !important;
-        padding-bottom: 3.5rem !important;
+        padding-bottom: 5.5rem !important;
         max-width: 1120px !important;
     }
 
@@ -66,30 +63,58 @@ st.markdown("""
     }
     [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4 {
         color: #F8FAFC !important;
-        font-size: 0.78rem !important;
+        font-size: 0.76rem !important;
         font-weight: 700 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.08em !important;
-        margin-top: 1.2rem !important;
-        margin-bottom: 0.6rem !important;
+        margin-top: 1.1rem !important;
+        margin-bottom: 0.5rem !important;
     }
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] label, [data-testid="stSidebar"] span {
         color: #94A3B8 !important;
         font-size: 0.84rem !important;
     }
 
+    /* Top Navigation Segmented Control Styling */
+    [data-testid="stSegmentedControl"] {
+        display: flex;
+        justify-content: flex-end;
+    }
+    [data-testid="stSegmentedControl"] button {
+        border-radius: 8px !important;
+        font-size: 0.86rem !important;
+        font-weight: 600 !important;
+        padding: 6px 16px !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+
     /* Sidebar Inputs */
-    [data-testid="stSidebar"] input {
+    [data-testid="stSidebar"] div[data-baseweb="input"],
+    [data-testid="stSidebar"] div[data-baseweb="base-input"] {
         background-color: #1A2C44 !important;
-        color: #FFFFFF !important;
         border: 1px solid #273E5D !important;
         border-radius: 8px !important;
+        overflow: hidden !important;
+    }
+    [data-testid="stSidebar"] div[data-baseweb="input"]:focus-within {
+        border-color: #159A91 !important;
+        box-shadow: 0 0 0 1px #159A91 !important;
+    }
+    [data-testid="stSidebar"] div[data-baseweb="input"] input {
+        background-color: transparent !important;
+        color: #F8FAFC !important;
+        border: none !important;
         font-size: 0.85rem !important;
         padding: 8px 12px !important;
     }
-    [data-testid="stSidebar"] input:focus {
-        border-color: #159A91 !important;
-        box-shadow: 0 0 0 1px #159A91 !important;
+    [data-testid="stSidebar"] div[data-baseweb="input"] button {
+        background-color: transparent !important;
+        color: #94A3B8 !important;
+        border: none !important;
+    }
+    [data-testid="stSidebar"] div[data-baseweb="input"] button:hover {
+        background-color: transparent !important;
+        color: #F8FAFC !important;
     }
 
     /* Primary Action Buttons in Sidebar */
@@ -114,7 +139,7 @@ st.markdown("""
         background-color: #FFFFFF;
         border: 1px solid #E6EAF0;
         border-radius: 12px;
-        padding: 20px 24px;
+        padding: 18px 22px;
         margin-bottom: 18px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
     }
@@ -124,9 +149,9 @@ st.markdown("""
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 8px 0 16px 0;
+        padding: 6px 0 14px 0;
         border-bottom: 1px solid #1E314B;
-        margin-bottom: 16px;
+        margin-bottom: 14px;
     }
     .brand-logo {
         background: linear-gradient(135deg, #159A91 0%, #0E7C75 100%);
@@ -198,29 +223,6 @@ st.markdown("""
         background-color: #ECFDF5;
         color: #065F46;
         border: 1px solid #A7F3D0;
-    }
-
-    /* Navigation Tabs */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: #FFFFFF;
-        padding: 6px 10px;
-        border-radius: 10px;
-        border: 1px solid #E6EAF0;
-        margin-bottom: 22px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        font-size: 0.88rem;
-        font-weight: 600;
-        color: #778399;
-        padding: 8px 16px;
-        border-radius: 6px;
-        transition: all 0.15s ease;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #F6F8FB !important;
-        color: #159A91 !important;
-        border-bottom: 2px solid #159A91 !important;
     }
 
     /* Hero Banner */
@@ -374,17 +376,52 @@ st.markdown("""
     .op-rag { background-color: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
     .op-chart { background-color: #FAF5FF; color: #7E22CE; border: 1px solid #E9D5FF; }
 
-    /* Clean Chat Message Card */
-    .chat-bubble-user {
-        background-color: #17243A;
-        color: #FFFFFF;
-        padding: 12px 18px;
-        border-radius: 14px 14px 2px 14px;
-        display: inline-block;
-        max-width: 85%;
-        margin-left: auto;
-        font-size: 0.92rem;
-        line-height: 1.5;
+    /* Bottom Bar & Chat Input Docking */
+    [data-testid="stBottom"] {
+        background-color: #F6F8FB !important;
+        border-top: 1px solid #E6EAF0 !important;
+        padding-top: 10px !important;
+        padding-bottom: 14px !important;
+    }
+    [data-testid="stBottom"] > div {
+        max-width: 1120px !important;
+        margin: 0 auto !important;
+    }
+    [data-testid="stChatInput"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #D5DCE5 !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+    [data-testid="stChatInput"]:focus-within {
+        border-color: #159A91 !important;
+        box-shadow: 0 0 0 2px rgba(21, 154, 145, 0.2) !important;
+    }
+    [data-testid="stChatInput"] textarea {
+        color: #17243A !important;
+        font-size: 0.9rem !important;
+    }
+    [data-testid="stChatInput"] button {
+        color: #159A91 !important;
+    }
+
+    /* Edit Button on User Chat Messages */
+    [data-testid="stChatMessage"] button[kind="secondary"] {
+        background-color: transparent !important;
+        border: 1px solid #CBD5E1 !important;
+        color: #64748B !important;
+        font-size: 0.72rem !important;
+        padding: 2px 8px !important;
+        border-radius: 6px !important;
+        min-height: 26px !important;
+        line-height: 1 !important;
+        transition: all 0.15s ease !important;
+    }
+    [data-testid="stChatMessage"] button[kind="secondary"]:hover {
+        background-color: #F1F5F9 !important;
+        color: #0F172A !important;
+        border-color: #94A3B8 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -430,6 +467,10 @@ if "processed_pdf_name" not in st.session_state:
     st.session_state.processed_pdf_name = None
 if "pending_query" not in st.session_state:
     st.session_state.pending_query = None
+if "editing_idx" not in st.session_state:
+    st.session_state.editing_idx = None
+if "active_view" not in st.session_state:
+    st.session_state.active_view = "Ask Data"
 
 
 def compile_agent_if_ready():
@@ -476,7 +517,7 @@ with st.sidebar:
         placeholder="Paste your API key...",
         label_visibility="collapsed"
     )
-    st.caption("Press Enter after entering your key to apply.")
+    st.caption("Press Enter after typing your key to apply.")
 
     if user_key != st.session_state.api_key:
         st.session_state.api_key = user_key.strip()
@@ -490,9 +531,9 @@ with st.sidebar:
     else:
         st.markdown("<span class='pill pill-muted'>Key Not Configured</span>", unsafe_allow_html=True)
 
-    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
-    # 3. Data Sources Section
+    # 4. Data Sources Section
     st.markdown("#### Data Sources")
     
     # Quick Load Demo Action (runs with 0 API key required)
@@ -512,7 +553,7 @@ with st.sidebar:
 
     # Distinct CSV Source Card
     if st.session_state.df is not None:
-        csv_badge = f"<span class='pill pill-teal'>{len(st.session_state.df)} rows • {st.session_state.df.shape[1]} cols</span>"
+        csv_badge = f"<span class='pill pill-teal'>{len(st.session_state.df)} rows</span>"
         st.markdown(f"""
         <div class="source-card">
             <div class="source-card-header">
@@ -577,7 +618,7 @@ with st.sidebar:
                 except Exception as e:
                     st.error(f"Upload error: {str(e)}")
 
-    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
     # 4. Session Controls
     st.markdown("#### Session Controls")
@@ -585,6 +626,7 @@ with st.sidebar:
     with c_col1:
         if st.button("Clear Chat", use_container_width=True):
             st.session_state.messages = []
+            st.session_state.editing_idx = None
             st.rerun()
     with c_col2:
         if st.button("Reset Data", use_container_width=True):
@@ -595,35 +637,46 @@ with st.sidebar:
             st.session_state.processed_csv_name = None
             st.session_state.processed_pdf_name = None
             st.session_state.messages = []
+            st.session_state.editing_idx = None
             st.rerun()
 
 
 # ==============================================================================
-# MAIN WORKSPACE: Header & Tabs
+# MAIN WORKSPACE: Header Banner & Top Horizontal Navigation
 # ==============================================================================
 
-# Compact Header Banner
 agent_ready = st.session_state.agent is not None
 readiness_badge = "<span class='pill pill-active-light'>Agent Ready</span>" if agent_ready else "<span class='pill' style='background:#F1F4F9; color:#475569;'>Awaiting Key / Data</span>"
 data_summary = f"{st.session_state.processed_csv_name or 'No CSV'} &bull; {st.session_state.processed_pdf_name or 'No PDF'}"
 
-st.markdown(f"""
-<div class="saas-card" style="padding: 16px 22px; margin-bottom: 20px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-        <div>
-            <div style="font-size: 1.35rem; font-weight: 700; color: #17243A; letter-spacing: -0.02em;">DataSense AI</div>
-            <div style="font-size: 0.88rem; color: #778399;">Enterprise AI Data Analyst &bull; {data_summary}</div>
-        </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
-            {readiness_badge}
-            <span class='pill' style='background:#F1F4F9; color:#33455E; border:1px solid #E2E8F0;'>LangGraph &bull; ChromaDB</span>
+if "active_view" not in st.session_state:
+    st.session_state.active_view = "Ask Data"
+
+# Main Top Header Bar with Horizontal View Switcher
+head_col1, head_col2 = st.columns([5, 5])
+with head_col1:
+    st.markdown(f"""
+    <div style="padding-top: 3px;">
+        <div style="font-size: 1.35rem; font-weight: 700; color: #17243A; letter-spacing: -0.02em;">DataSense AI</div>
+        <div style="font-size: 0.82rem; color: #778399; margin-top: 2px;">
+            Context: <strong style="color:#17243A;">{data_summary}</strong> &bull; {readiness_badge}
         </div>
     </div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
-# 3 Primary Workspace Navigation Tabs
-tab_ask, tab_explorer, tab_docs = st.tabs(["Ask Data", "Data Explorer", "Document Library"])
+with head_col2:
+    selected_nav = st.segmented_control(
+        "Workspace View Navigation",
+        options=["Ask Data", "Data Explorer", "Document Library"],
+        default=st.session_state.active_view,
+        label_visibility="collapsed",
+        key="top_segmented_nav"
+    )
+    if selected_nav:
+        st.session_state.active_view = selected_nav
+
+active_view = st.session_state.active_view
+st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 
 
 # Helper: Dynamic Chart & Visual Widget Rendering
@@ -740,13 +793,53 @@ def render_execution_details(tools_called: list):
 
 
 # ==============================================================================
-# TAB 1: ASK DATA (Conversational Workspace)
+# VIEW 1: ASK DATA (Conversational Workspace)
 # ==============================================================================
-with tab_ask:
-    # Empty State: Modern Welcome Panel & 3-Category Query Cards
+if active_view == "Ask Data":
+    # 1. Always-Available Example Inquiries Dropdown (Never vanishes!)
+    demo_questions = [
+        "-- Select an example inquiry to try --",
+        "[Sales] Which product generated the highest revenue?",
+        "[Sales] Show the monthly revenue trend.",
+        "[Sales] Which region generated the highest sales?",
+        "[Sales] What is the average transaction value across categories?",
+        "[Policy] What is the return policy for electronics?",
+        "[Policy] What are the warranty terms and conditions?",
+        "[Policy] What are the volume bulk discount rules?",
+        "[Combined] Which electronics product generated the highest revenue, and what is its return policy?",
+        "[Combined] Which category has the highest revenue, and does it have a special discount policy?",
+        "[Plot] Plot revenue by category as a bar chart",
+        "[Plot] Plot monthly revenue trajectory as a line chart",
+        "[Plot] Plot regional revenue comparison"
+    ]
+
+    col_demo_select, col_demo_btn = st.columns([5, 1])
+    with col_demo_select:
+        chosen_demo = st.selectbox(
+            "Example Inquiries",
+            options=demo_questions,
+            index=0,
+            label_visibility="collapsed",
+            key="demo_inquiry_dropdown"
+        )
+    with col_demo_btn:
+        btn_run_demo = st.button("Run Query", use_container_width=True, key="btn_run_demo")
+
+    if btn_run_demo and chosen_demo != demo_questions[0]:
+        clean_prompt = re.sub(r"^\[.*?\]\s*", "", chosen_demo).strip()
+        st.session_state.messages.append({"role": "user", "content": clean_prompt})
+        st.rerun()
+
+    # Process pending query (e.g. from buttons or edit actions)
+    if st.session_state.pending_query:
+        st.session_state.messages.append({"role": "user", "content": st.session_state.pending_query})
+        st.session_state.pending_query = None
+        st.rerun()
+
+    # Starter Welcome Hero Panel (Shown when conversation is empty)
     if len(st.session_state.messages) == 0:
         st.markdown("""
-        <div class="hero-panel">
+        <div class="hero-panel" style="margin-top: 10px;">
             <div class="hero-h1">Your data has answers. Let's find them.</div>
             <div class="hero-p">Ask complex questions across your sales transactions and operational PDF handbooks using natural language.</div>
             <div class="tag-container">
@@ -762,130 +855,166 @@ with tab_ask:
         col_s1, col_s2, col_s3 = st.columns(3)
         with col_s1:
             if st.button("Top Product by Revenue\nIdentify the highest earning product", key="btn_q_top", use_container_width=True):
-                st.session_state.pending_query = "Which product generated the highest revenue?"
+                st.session_state.messages.append({"role": "user", "content": "Which product generated the highest revenue?"})
+                st.rerun()
         with col_s2:
-            if st.button("Monthly Revenue Trend\nView chronological sales trajectory across 2024", key="btn_q_month", use_container_width=True):
-                st.session_state.pending_query = "Show the monthly revenue trend."
+            if st.button("Monthly Revenue Trend\nView chronological sales trajectory", key="btn_q_month", use_container_width=True):
+                st.session_state.messages.append({"role": "user", "content": "Show the monthly revenue trend."})
+                st.rerun()
         with col_s3:
-            if st.button("Regional Sales Comparison\nCompare performance and orders across regions", key="btn_q_reg", use_container_width=True):
-                st.session_state.pending_query = "Which region generated the highest sales?"
+            if st.button("Regional Sales Comparison\nCompare performance across regions", key="btn_q_reg", use_container_width=True):
+                st.session_state.messages.append({"role": "user", "content": "Which region generated the highest sales?"})
+                st.rerun()
 
-        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
         st.markdown('<div class="query-card-header qc-docs">Document Search</div>', unsafe_allow_html=True)
         col_d1, col_d2 = st.columns(2)
         with col_d1:
-            if st.button("Electronics Return Policy\nCheck return window, condition rules, and restocking fees", key="btn_q_ret", use_container_width=True):
-                st.session_state.pending_query = "What is the return policy for electronics?"
+            if st.button("Electronics Return Policy\nCheck return window and condition rules", key="btn_q_ret", use_container_width=True):
+                st.session_state.messages.append({"role": "user", "content": "What is the return policy for electronics?"})
+                st.rerun()
         with col_d2:
-            if st.button("Warranty Terms & Conditions\nInspect hardware, battery, and structural coverage", key="btn_q_warr", use_container_width=True):
-                st.session_state.pending_query = "What are the warranty conditions?"
+            if st.button("Warranty Terms & Conditions\nInspect hardware and battery coverage", key="btn_q_warr", use_container_width=True):
+                st.session_state.messages.append({"role": "user", "content": "What are the warranty conditions?"})
+                st.rerun()
 
-        st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
         st.markdown('<div class="query-card-header qc-comb">Combined Intelligence (Multi-Source Reasoning)</div>', unsafe_allow_html=True)
         col_c1, col_c2 = st.columns(2)
         with col_c1:
-            if st.button("Top Product & Return Policy\nJoint analysis finding top product and its return policy", key="btn_q_comb1", use_container_width=True):
-                st.session_state.pending_query = "Which electronics product generated the highest revenue, and what is its return policy?"
+            if st.button("Top Product & Return Policy\nJoint analysis finding top product and its policy", key="btn_q_comb1", use_container_width=True):
+                st.session_state.messages.append({"role": "user", "content": "Which electronics product generated the highest revenue, and what is its return policy?"})
+                st.rerun()
         with col_c2:
-            if st.button("Category Sales & Volume Discounts\nCheck highest earning category and bulk pricing rules", key="btn_q_comb2", use_container_width=True):
-                st.session_state.pending_query = "Which category has the highest revenue, and does it have a special discount policy?"
+            if st.button("Category Sales & Volume Discounts\nCheck highest earning category and bulk discounts", key="btn_q_comb2", use_container_width=True):
+                st.session_state.messages.append({"role": "user", "content": "Which category has the highest revenue, and does it have a special discount policy?"})
+                st.rerun()
 
         st.markdown("---")
 
-    # Display Active Message History
-    for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+    # 2. Main Chat Message Container (Always strictly ABOVE the chat input)
+    chat_container = st.container()
+    with chat_container:
+        for idx, msg in enumerate(st.session_state.messages):
+            if msg["role"] == "user":
+                with st.chat_message("user"):
+                    if st.session_state.editing_idx == idx:
+                        # ChatGPT Style In-Place Query Editing
+                        st.caption("Edit your question:")
+                        edited_query = st.text_area(
+                            "Edit query",
+                            value=msg["content"],
+                            key=f"edit_area_{idx}",
+                            label_visibility="collapsed"
+                        )
+                        col_save, col_cancel, _ = st.columns([1, 1, 4])
+                        with col_save:
+                            if st.button("Save & Submit", key=f"btn_save_{idx}", type="primary"):
+                                st.session_state.messages = st.session_state.messages[:idx]
+                                st.session_state.editing_idx = None
+                                st.session_state.messages.append({"role": "user", "content": edited_query})
+                                st.rerun()
+                        with col_cancel:
+                            if st.button("Cancel", key=f"btn_cancel_{idx}"):
+                                st.session_state.editing_idx = None
+                                st.rerun()
+                    else:
+                        col_text, col_edit = st.columns([11, 1])
+                        with col_text:
+                            st.markdown(msg["content"])
+                        with col_edit:
+                            if st.button("Edit", key=f"btn_edit_{idx}", help="Edit this question"):
+                                st.session_state.editing_idx = idx
+                                st.rerun()
 
-            if msg.get("tools_called") and st.session_state.df is not None:
-                render_dynamic_visuals(msg["tools_called"], st.session_state.df)
+            elif msg["role"] == "assistant":
+                with st.chat_message("assistant"):
+                    st.markdown(msg["content"])
 
-            if msg.get("tools_called"):
-                render_execution_details(msg["tools_called"])
+                    if msg.get("tools_called") and st.session_state.df is not None:
+                        render_dynamic_visuals(msg["tools_called"], st.session_state.df)
 
-    # Chat Composer Input
-    user_query = st.chat_input("Ask an analytical question or search company policy handbook...")
+                    if msg.get("tools_called"):
+                        render_execution_details(msg["tools_called"])
 
-    # Process query triggered by suggested card
-    if st.session_state.pending_query:
-        user_query = st.session_state.pending_query
-        st.session_state.pending_query = None
+    # 3. Robust In-Flight Query Handling (Resumes seamlessly even if user switched tabs!)
+    if st.session_state.messages and st.session_state.messages[-1]["role"] == "user":
+        unanswered_query = st.session_state.messages[-1]["content"]
 
-    if user_query:
         if not st.session_state.api_key.strip():
-            st.error("Please enter your Gemini API Key in the sidebar before asking questions.")
-            st.stop()
-
-        if st.session_state.agent is None:
-            compile_agent_if_ready()
+            with chat_container:
+                st.warning("Please enter your Google Gemini API Key in the sidebar to run the agent.")
+        else:
             if st.session_state.agent is None:
-                st.error("Agent initialization failed. Please verify your API key and data sources.")
-                st.stop()
+                compile_agent_if_ready()
 
-        # Append & Display User Message
-        st.session_state.messages.append({"role": "user", "content": user_query})
-        with st.chat_message("user"):
-            st.markdown(user_query)
+            if st.session_state.agent is None:
+                with chat_container:
+                    st.error("Agent initialization failed. Please verify your Gemini API key.")
+            else:
+                with chat_container:
+                    with st.chat_message("assistant"):
+                        with st.spinner("Analyzing structured transactions and document knowledge..."):
+                            try:
+                                graph_messages = [SystemMessage(content=SYSTEM_PROMPT)]
+                                for past_msg in st.session_state.messages[:-1]:
+                                    if past_msg["role"] == "user":
+                                        graph_messages.append(HumanMessage(content=past_msg["content"]))
+                                    elif past_msg["role"] == "assistant":
+                                        graph_messages.append(AIMessage(content=past_msg["content"]))
 
-        # Execute Agent Workflow
-        with st.chat_message("assistant"):
-            with st.spinner("Analyzing structured transactions and document knowledge..."):
-                try:
-                    graph_messages = [SystemMessage(content=SYSTEM_PROMPT)]
-                    for past_msg in st.session_state.messages:
-                        if past_msg["role"] == "user":
-                            graph_messages.append(HumanMessage(content=past_msg["content"]))
-                        elif past_msg["role"] == "assistant":
-                            graph_messages.append(AIMessage(content=past_msg["content"]))
+                                graph_messages.append(HumanMessage(content=unanswered_query))
 
-                    # Invoke LangGraph
-                    result = st.session_state.agent.invoke({"messages": graph_messages})
+                                result = st.session_state.agent.invoke({"messages": graph_messages})
 
-                    all_msgs = result["messages"]
-                    final_ai_msg = all_msgs[-1]
-                    response_text = extract_text_content(final_ai_msg.content)
+                                all_msgs = result["messages"]
+                                final_ai_msg = all_msgs[-1]
+                                response_text = extract_text_content(final_ai_msg.content)
 
-                    # Extract tools called
-                    tools_called = []
-                    for m in all_msgs:
-                        if hasattr(m, "name") and m.name:
-                            tools_called.append({
-                                "name": m.name,
-                                "output": str(m.content)
-                            })
+                                tools_called = []
+                                for m in all_msgs:
+                                    if hasattr(m, "name") and m.name:
+                                        tools_called.append({
+                                            "name": m.name,
+                                            "output": str(m.content)
+                                        })
 
-                    # Render Text Response
-                    st.markdown(response_text)
+                                st.markdown(response_text)
 
-                    # Render Dynamic Charts / Tables
-                    if tools_called and st.session_state.df is not None:
-                        render_dynamic_visuals(tools_called, st.session_state.df)
+                                if tools_called and st.session_state.df is not None:
+                                    render_dynamic_visuals(tools_called, st.session_state.df)
 
-                    # Render Factual Execution Trace
-                    if tools_called:
-                        render_execution_details(tools_called)
+                                if tools_called:
+                                    render_execution_details(tools_called)
 
-                    # Store in conversation state
-                    st.session_state.messages.append({
-                        "role": "assistant",
-                        "content": response_text,
-                        "tools_called": tools_called
-                    })
+                                st.session_state.messages.append({
+                                    "role": "assistant",
+                                    "content": response_text,
+                                    "tools_called": tools_called
+                                })
+                                st.rerun()
 
-                except Exception as e:
-                    error_msg = f"An error occurred: {str(e)}"
-                    st.error(error_msg)
-                    st.session_state.messages.append({
-                        "role": "assistant",
-                        "content": error_msg,
-                        "tools_called": []
-                    })
+                            except Exception as e:
+                                err = f"An error occurred: {str(e)}"
+                                st.error(err)
+                                st.session_state.messages.append({
+                                    "role": "assistant",
+                                    "content": err,
+                                    "tools_called": []
+                                })
+                                st.rerun()
+
+    # 4. Chat Composer Input (Permanently Anchored at Bottom in stBottom)
+    chat_prompt = st.chat_input("Ask an analytical question or search company policy handbook...")
+    if chat_prompt:
+        st.session_state.messages.append({"role": "user", "content": chat_prompt})
+        st.rerun()
 
 
 # ==============================================================================
-# TAB 2: DATA EXPLORER (Business Intelligence Dashboard)
+# VIEW 2: DATA EXPLORER (Business Intelligence Dashboard)
 # ==============================================================================
-with tab_explorer:
+elif active_view == "Data Explorer":
     if st.session_state.df is not None:
         df = st.session_state.df
 
@@ -998,9 +1127,9 @@ with tab_explorer:
 
 
 # ==============================================================================
-# TAB 3: DOCUMENT LIBRARY (Document Intelligence Workspace)
+# VIEW 3: DOCUMENT LIBRARY (Document Intelligence Workspace)
 # ==============================================================================
-with tab_docs:
+elif active_view == "Document Library":
     if st.session_state.raw_docs is not None:
         docs = st.session_state.raw_docs
         chunks = split_documents(docs)
