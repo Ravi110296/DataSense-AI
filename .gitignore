@@ -22,3 +22,10 @@ chroma_db/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Project guides & auxiliary scripts (kept locally, not on GitHub)
+PROJECT_REPORT_AND_INTERVIEW_GUIDE.pdf
+PROJECT_REPORT_AND_INTERVIEW_GUIDE.md
+generate_pdf_report.py
+generate_sample_data.py
+test_agent.py
